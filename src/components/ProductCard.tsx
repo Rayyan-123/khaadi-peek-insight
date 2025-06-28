@@ -1,10 +1,10 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag, Eye } from "lucide-react";
 import { PaymentModal } from "@/components/PaymentModal";
+import { ViewCounter } from "@/components/ViewCounter";
 
 interface Product {
   id: string;
@@ -24,6 +24,7 @@ interface ProductCardProps {
 export const ProductCard = ({ product, currency, region }: ProductCardProps) => {
   const [showPayment, setShowPayment] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -31,6 +32,13 @@ export const ProductCard = ({ product, currency, region }: ProductCardProps) => 
       currency: currency,
       minimumFractionDigits: 0,
     }).format(price);
+  };
+
+  const addToCart = () => {
+    setIsInCart(true);
+    // Simulate adding to cart
+    console.log("Added to cart:", product.id);
+    setTimeout(() => setIsInCart(false), 2000);
   };
 
   return (
@@ -68,7 +76,10 @@ export const ProductCard = ({ product, currency, region }: ProductCardProps) => 
           <p className="text-gray-600 text-sm mb-3 line-clamp-2">
             {product.description}
           </p>
-          <div className="flex items-center justify-between">
+          
+          <ViewCounter productId={product.id} />
+          
+          <div className="flex items-center justify-between mt-3">
             <div className="flex items-center space-x-2">
               <span className="text-xl font-bold text-amber-600">
                 {formatPrice(product.price)}
@@ -89,8 +100,13 @@ export const ProductCard = ({ product, currency, region }: ProductCardProps) => 
               <ShoppingBag className="w-4 h-4 mr-2" />
               Buy Now
             </Button>
-            <Button variant="outline" className="flex-1">
-              Add to Cart
+            <Button 
+              variant="outline" 
+              className={`flex-1 ${isInCart ? 'bg-green-100 text-green-700' : ''}`}
+              onClick={addToCart}
+              disabled={isInCart}
+            >
+              {isInCart ? 'Added!' : 'Add to Cart'}
             </Button>
           </div>
         </CardContent>

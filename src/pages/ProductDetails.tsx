@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,12 +5,17 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, ShoppingBag, ArrowLeft, Share2, Star } from "lucide-react";
 import { AdSenseAd } from "@/components/AdSenseAd";
+import { ProductRating } from "@/components/ProductRating";
+import { ProductComments } from "@/components/ProductComments";
+import { ViewCounter } from "@/components/ViewCounter";
+import { PaymentForm } from "@/components/PaymentForm";
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [selectedSize, setSelectedSize] = useState("M");
   const [quantity, setQuantity] = useState(1);
+  const [showPayment, setShowPayment] = useState(false);
 
   // Mock product data - in real app, fetch based on ID
   const product = {
@@ -30,6 +34,14 @@ const ProductDetails = () => {
     rating: 4.5,
     reviews: 28
   };
+
+  const pakistaniBanks = [
+    "HBL (Habib Bank Limited)",
+    "MCB (Muslim Commercial Bank)", 
+    "Meezan Bank",
+    "UBL (United Bank Limited)",
+    "Allied Bank"
+  ];
 
   return (
     <div className="min-h-screen bg-white">
@@ -83,14 +95,15 @@ const ProductDetails = () => {
             <div>
               <Badge variant="secondary" className="mb-2">{product.category}</Badge>
               <h1 className="text-3xl font-bold text-gray-800 mb-2">{product.name}</h1>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                  ))}
-                </div>
-                <span className="text-sm text-gray-600">({product.reviews} reviews)</span>
-              </div>
+              
+              <ViewCounter productId={product.id} />
+              
+              <ProductRating 
+                productId={product.id} 
+                initialRating={product.rating}
+                totalRatings={product.reviews}
+              />
+              
               <div className="flex items-center space-x-4">
                 <span className="text-3xl font-bold text-amber-600">PKR {product.price.toLocaleString()}</span>
                 <span className="text-xl text-gray-500 line-through">PKR {product.originalPrice.toLocaleString()}</span>
@@ -140,7 +153,11 @@ const ProductDetails = () => {
               <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white py-3">
                 Add to Cart - PKR {(product.price * quantity).toLocaleString()}
               </Button>
-              <Button variant="outline" className="w-full py-3">
+              <Button 
+                variant="outline" 
+                className="w-full py-3"
+                onClick={() => setShowPayment(true)}
+              >
                 Buy Now
               </Button>
             </div>
@@ -158,6 +175,28 @@ const ProductDetails = () => {
             </Card>
           </div>
         </div>
+
+        {showPayment && (
+          <div className="mt-12">
+            <PaymentForm
+              product={{
+                id: product.id,
+                name: product.name,
+                price: product.price * quantity,
+                image: product.images[0]
+              }}
+              currency="PKR"
+              region="Pakistan"
+              banks={pakistaniBanks}
+              onPaymentSuccess={() => {
+                setShowPayment(false);
+                alert("Order confirmed! Thank you for your purchase.");
+              }}
+            />
+          </div>
+        )}
+
+        <ProductComments productId={product.id} />
 
         {/* AdSense Ad */}
         <AdSenseAd 
