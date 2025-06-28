@@ -1,9 +1,10 @@
 
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Heart, ShoppingBag } from "lucide-react";
-import { useState } from "react";
+import { PaymentModal } from "@/components/PaymentModal";
 
 interface Product {
   id: string;
@@ -21,72 +22,87 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ product, currency, region }: ProductCardProps) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(false);
 
-  const handlePayment = () => {
-    // This will be integrated with Stripe payment
-    console.log(`Initiating payment for ${product.name} in ${region}`);
-    // You can integrate with your payment system here
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0,
+    }).format(price);
   };
 
   return (
-    <Card 
-      className="group overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="relative overflow-hidden">
-        <img 
-          src={product.image} 
-          alt={product.name}
-          className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-        <div className="absolute top-3 right-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="bg-white/80 hover:bg-white"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsLiked(!isLiked);
-            }}
-          >
-            <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
-          </Button>
-        </div>
-        <Badge className="absolute top-3 left-3 bg-amber-500 hover:bg-amber-600">
-          {product.category}
-        </Badge>
-        {isHovered && (
-          <div className="absolute inset-0 bg-black/20 flex items-center justify-center transition-opacity duration-300">
-            <Button 
-              className="bg-white text-gray-800 hover:bg-gray-100"
-              onClick={handlePayment}
+    <>
+      <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
+        <div className="relative overflow-hidden">
+          <a href={`/product/${product.id}`}>
+            <img 
+              src={product.image} 
+              alt={product.name}
+              className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          </a>
+          <div className="absolute top-2 right-2 flex flex-col gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="bg-white/80 hover:bg-white"
+              onClick={() => setIsWishlisted(!isWishlisted)}
             >
-              <ShoppingBag className="w-4 h-4 mr-2" />
-              Quick Buy
+              <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
             </Button>
           </div>
-        )}
-      </div>
-      
-      <CardContent className="p-4">
-        <h4 className="font-semibold text-gray-800 mb-2 line-clamp-1">{product.name}</h4>
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</p>
-        <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-amber-600">
-            {currency} {product.price.toLocaleString()}
-          </span>
-          <Button 
-            size="sm" 
-            className="bg-amber-600 hover:bg-amber-700"
-            onClick={handlePayment}
-          >
-            Buy Now
-          </Button>
+          <Badge className="absolute top-2 left-2 bg-amber-600 hover:bg-amber-700">
+            {product.category}
+          </Badge>
         </div>
-      </CardContent>
-    </Card>
+        
+        <CardContent className="p-4">
+          <a href={`/product/${product.id}`}>
+            <h3 className="font-semibold text-lg mb-2 group-hover:text-amber-600 transition-colors">
+              {product.name}
+            </h3>
+          </a>
+          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+            {product.description}
+          </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-xl font-bold text-amber-600">
+                {formatPrice(product.price)}
+              </span>
+              <span className="text-sm text-gray-500 line-through">
+                {formatPrice(product.price * 1.4)}
+              </span>
+            </div>
+            <Badge variant="destructive" className="text-xs">
+              30% OFF
+            </Badge>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <Button 
+              className="flex-1 bg-amber-600 hover:bg-amber-700"
+              onClick={() => setShowPayment(true)}
+            >
+              <ShoppingBag className="w-4 h-4 mr-2" />
+              Buy Now
+            </Button>
+            <Button variant="outline" className="flex-1">
+              Add to Cart
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <PaymentModal 
+        isOpen={showPayment}
+        onClose={() => setShowPayment(false)}
+        product={product}
+        currency={currency}
+        region={region}
+      />
+    </>
   );
 };

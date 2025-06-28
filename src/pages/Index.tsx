@@ -76,6 +76,8 @@ const Index = () => {
               <a href="#" className="text-gray-700 hover:text-amber-600 transition-colors">Unstitched</a>
               <a href="#" className="text-gray-700 hover:text-amber-600 transition-colors">Ready to Wear</a>
               <a href="#" className="text-gray-700 hover:text-amber-600 transition-colors">Accessories</a>
+              <a href="/about" className="text-gray-700 hover:text-amber-600 transition-colors">About</a>
+              <a href="/contact" className="text-gray-700 hover:text-amber-600 transition-colors">Contact</a>
               <RegionSelector selectedRegion={selectedRegion} onRegionChange={setSelectedRegion} />
             </nav>
 
@@ -188,8 +190,8 @@ const Index = () => {
             <div>
               <h5 className="font-semibold mb-4">Quick Links</h5>
               <ul className="space-y-2 text-gray-300">
-                <li><a href="#" className="hover:text-white">About Us</a></li>
-                <li><a href="#" className="hover:text-white">Size Guide</a></li>
+                <li><a href="/about" className="hover:text-white">About Us</a></li>
+                <li><a href="/size-guide" className="hover:text-white">Size Guide</a></li>
                 <li><a href="#" className="hover:text-white">Shipping Info</a></li>
                 <li><a href="#" className="hover:text-white">Returns</a></li>
               </ul>
@@ -197,7 +199,7 @@ const Index = () => {
             <div>
               <h5 className="font-semibold mb-4">Customer Service</h5>
               <ul className="space-y-2 text-gray-300">
-                <li><a href="#" className="hover:text-white">Contact Us</a></li>
+                <li><a href="/contact" className="hover:text-white">Contact Us</a></li>
                 <li><a href="#" className="hover:text-white">FAQ</a></li>
                 <li><a href="#" className="hover:text-white">Track Order</a></li>
                 <li><a href="#" className="hover:text-white">Exchange Policy</a></li>
