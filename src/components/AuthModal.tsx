@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GoogleIcon } from "@/components/GoogleIcon";
+import { googleAuthService } from "@/services/googleAuthService";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) =>
     password: "", 
     confirmPassword: "" 
   });
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const { toast } = useToast();
 
   const handleLogin = () => {
@@ -118,25 +120,27 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) =>
     onClose();
   };
 
-  const handleGoogleLogin = () => {
-    // Simulate Google OAuth flow
-    const mockGoogleUser = {
-      id: `google_${Date.now()}`,
-      name: "Google User",
-      email: "user@gmail.com",
-      provider: "google",
-      avatar: `https://ui-avatars.com/api/?name=Google+User&background=4285f4&color=fff`,
-      createdAt: new Date().toISOString()
-    };
-
-    // In a real app, this would integrate with Google OAuth
-    localStorage.setItem('currentUser', JSON.stringify(mockGoogleUser));
-    onAuthSuccess(mockGoogleUser);
-    toast({
-      title: "Success!",
-      description: "Logged in with Google account",
-    });
-    onClose();
+  const handleGoogleLogin = async () => {
+    setIsGoogleLoading(true);
+    try {
+      const googleAccount = await googleAuthService.initiateGoogleAuth();
+      
+      localStorage.setItem('currentUser', JSON.stringify(googleAccount));
+      onAuthSuccess(googleAccount);
+      toast({
+        title: "Success!",
+        description: `Welcome ${googleAccount.name}!`,
+      });
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Authentication Failed",
+        description: "Could not complete Google sign-in",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   const handleSocialLogin = (provider: string) => {
@@ -305,11 +309,12 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) =>
           <div className="grid grid-cols-2 gap-3">
             <Button 
               variant="outline" 
-              onClick={() => handleSocialLogin('Google')}
+              onClick={handleGoogleLogin}
+              disabled={isGoogleLoading}
               className="w-full flex items-center gap-2"
             >
               <GoogleIcon className="w-4 h-4" />
-              Google
+              {isGoogleLoading ? 'Loading...' : 'Google'}
             </Button>
             <Button 
               variant="outline" 
