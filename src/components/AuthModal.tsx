@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { GoogleIcon } from "@/components/GoogleIcon";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -118,13 +118,40 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) =>
     onClose();
   };
 
+  const handleGoogleLogin = () => {
+    // Simulate Google OAuth flow
+    const mockGoogleUser = {
+      id: `google_${Date.now()}`,
+      name: "Google User",
+      email: "user@gmail.com",
+      provider: "google",
+      avatar: `https://ui-avatars.com/api/?name=Google+User&background=4285f4&color=fff`,
+      createdAt: new Date().toISOString()
+    };
+
+    // In a real app, this would integrate with Google OAuth
+    localStorage.setItem('currentUser', JSON.stringify(mockGoogleUser));
+    onAuthSuccess(mockGoogleUser);
+    toast({
+      title: "Success!",
+      description: "Logged in with Google account",
+    });
+    onClose();
+  };
+
   const handleSocialLogin = (provider: string) => {
-    // Simulate social login
+    if (provider === 'Google') {
+      handleGoogleLogin();
+      return;
+    }
+
+    // Simulate other social logins
     const socialUser = {
       id: Date.now().toString(),
       name: `${provider} User`,
       email: `user@${provider.toLowerCase()}.com`,
       provider: provider,
+      avatar: `https://ui-avatars.com/api/?name=${provider}+User&background=random`,
       createdAt: new Date().toISOString()
     };
 
@@ -279,8 +306,9 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) =>
             <Button 
               variant="outline" 
               onClick={() => handleSocialLogin('Google')}
-              className="w-full"
+              className="w-full flex items-center gap-2"
             >
+              <GoogleIcon className="w-4 h-4" />
               Google
             </Button>
             <Button 

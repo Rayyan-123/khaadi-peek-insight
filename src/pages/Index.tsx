@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +11,7 @@ import { ChatWidget } from "@/components/ChatWidget";
 import { ShoppingCart } from "@/components/ShoppingCart";
 import { Heart, ShoppingBag, User, Search, Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { UserAccountDropdown } from "@/components/UserAccountDropdown";
 
 const Index = () => {
   const [selectedRegion, setSelectedRegion] = useState("Pakistan");
@@ -104,6 +104,10 @@ const Index = () => {
     setCurrentUser(null);
   };
 
+  const handleSwitchAccount = () => {
+    setShowAuthModal(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
       {/* SEO Meta Tags - Would be handled by Helmet in a real app */}
@@ -151,12 +155,11 @@ const Index = () => {
                 
                 {/* User Account */}
                 {currentUser ? (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-700">Hello, {currentUser.name}</span>
-                    <Button variant="outline" size="sm" onClick={handleLogout}>
-                      Logout
-                    </Button>
-                  </div>
+                  <UserAccountDropdown 
+                    user={currentUser}
+                    onLogout={handleLogout}
+                    onSwitchAccount={handleSwitchAccount}
+                  />
                 ) : (
                   <Button 
                     variant="outline" 
@@ -208,7 +211,15 @@ const Index = () => {
                   </Button>
                 </div>
                 
-                {!currentUser && (
+                {currentUser ? (
+                  <div className="pt-4 border-t">
+                    <UserAccountDropdown 
+                      user={currentUser}
+                      onLogout={handleLogout}
+                      onSwitchAccount={handleSwitchAccount}
+                    />
+                  </div>
+                ) : (
                   <Button 
                     variant="outline" 
                     className="mt-4"
