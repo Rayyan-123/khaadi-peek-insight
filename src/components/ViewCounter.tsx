@@ -9,31 +9,47 @@ interface ViewCounterProps {
 export const ViewCounter = ({ productId }: ViewCounterProps) => {
   const [viewCount, setViewCount] = useState(0);
   const [userViews, setUserViews] = useState(0);
+  const [hasIncremented, setHasIncremented] = useState(false);
 
   useEffect(() => {
-    // Simulate fetching view count from API
+    // Get existing view counts
     const savedViews = localStorage.getItem(`views_${productId}`);
     const savedUserViews = localStorage.getItem(`user_views_${productId}`);
+    const sessionKey = `session_viewed_${productId}`;
+    const hasViewedInSession = sessionStorage.getItem(sessionKey);
     
-    setViewCount(savedViews ? parseInt(savedViews) : Math.floor(Math.random() * 1000) + 100);
-    setUserViews(savedUserViews ? parseInt(savedUserViews) : 0);
+    let initialViews = savedViews ? parseInt(savedViews) : Math.floor(Math.random() * 1000) + 100;
+    let initialUserViews = savedUserViews ? parseInt(savedUserViews) : 0;
     
-    // Increment view count
-    const newViewCount = (savedViews ? parseInt(savedViews) : Math.floor(Math.random() * 1000) + 100) + 1;
-    const newUserViews = (savedUserViews ? parseInt(savedUserViews) : 0) + 1;
+    setViewCount(initialViews);
+    setUserViews(initialUserViews);
     
-    setViewCount(newViewCount);
-    setUserViews(newUserViews);
-    
-    localStorage.setItem(`views_${productId}`, newViewCount.toString());
-    localStorage.setItem(`user_views_${productId}`, newUserViews.toString());
-  }, [productId]);
+    // Only increment if not viewed in this session
+    if (!hasViewedInSession && !hasIncremented) {
+      const newViewCount = initialViews + 1;
+      const newUserViews = initialUserViews + 1;
+      
+      setViewCount(newViewCount);
+      setUserViews(newUserViews);
+      
+      localStorage.setItem(`views_${productId}`, newViewCount.toString());
+      localStorage.setItem(`user_views_${productId}`, newUserViews.toString());
+      sessionStorage.setItem(sessionKey, 'true');
+      
+      setHasIncremented(true);
+    }
+  }, [productId, hasIncremented]);
 
   return (
     <div className="flex items-center space-x-2 text-sm text-gray-600">
       <Eye className="w-4 h-4" />
-      <span>{viewCount.toLocaleString()} views</span>
-      <span className="text-xs">({userViews} by you)</span>
+      <span className="font-medium">{viewCount.toLocaleString()}</span>
+      <span>views</span>
+      {userViews > 0 && (
+        <span className="text-xs text-amber-600">
+          ({userViews} by you)
+        </span>
+      )}
     </div>
   );
 };
