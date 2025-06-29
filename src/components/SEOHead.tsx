@@ -82,9 +82,9 @@ export const SEOHead = ({
       ]
     };
 
-    let scriptTag = document.querySelector('script[type="application/ld+json"]');
+    let scriptTag = document.querySelector('script[type="application/ld+json"]') as HTMLScriptElement;
     if (!scriptTag) {
-      scriptTag = document.createElement('script');
+      scriptTag = document.createElement('script') as HTMLScriptElement;
       scriptTag.type = 'application/ld+json';
       document.head.appendChild(scriptTag);
     }
