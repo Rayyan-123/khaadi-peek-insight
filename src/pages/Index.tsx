@@ -1,68 +1,80 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProductCard } from "@/components/ProductCard";
 import { RegionSelector } from "@/components/RegionSelector";
 import { AdSenseAd } from "@/components/AdSenseAd";
+import { PaymentModal } from "@/components/PaymentModal";
+import { AuthModal } from "@/components/AuthModal";
+import { ChatWidget } from "@/components/ChatWidget";
 import { ShoppingCart } from "@/components/ShoppingCart";
-import { Heart, Search, ShoppingBag, User, Menu } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Heart, ShoppingBag, User, Search, Menu, X } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Index = () => {
-  const navigate = useNavigate();
   const [selectedRegion, setSelectedRegion] = useState("Pakistan");
   const [currency, setCurrency] = useState("PKR");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showCart, setShowCart] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const products = [
+  // Check for logged in user on component mount
+  useEffect(() => {
+    const user = localStorage.getItem('currentUser');
+    if (user) {
+      setCurrentUser(JSON.parse(user));
+    }
+  }, []);
+
+  const featuredProducts = [
     {
       id: "1",
-      name: "Floral Lawn Kurta",
-      price: 5000,
+      name: "Embroidered Silk Kurta",
+      price: 8500,
+      discountPrice: 6500,
       image: "/placeholder.svg",
-      description: "Beautiful embroidered lawn kurta with intricate floral patterns.",
-      category: "Kurtas"
+      description: "Luxurious silk kurta with intricate embroidery work",
+      category: "Featured",
+      rating: 4.8,
+      reviews: 124
     },
     {
       id: "2",
-      name: "Printed Silk Dress",
-      price: 8000,
+      name: "Designer Lawn Collection",
+      price: 5500,
+      discountPrice: 4200,
       image: "/placeholder.svg",
-      description: "Elegant silk dress with vibrant digital prints.",
-      category: "Dresses"
+      description: "Premium lawn fabric with modern prints",
+      category: "Featured",
+      rating: 4.6,
+      reviews: 89
     },
     {
       id: "3",
-      name: "Embroidered Khaddar Suit",
-      price: 6500,
+      name: "Formal Wear Ensemble",
+      price: 12000,
+      discountPrice: 9500,
       image: "/placeholder.svg",
-      description: "Warm and stylish khaddar suit with traditional embroidery.",
-      category: "Suits"
+      description: "Complete formal wear set for special occasions",
+      category: "Featured",
+      rating: 4.9,
+      reviews: 156
     },
     {
       id: "4",
-      name: "Cotton Net Dupatta",
-      price: 2000,
+      name: "Casual Chic Outfit",
+      price: 4500,
+      discountPrice: 3200,
       image: "/placeholder.svg",
-      description: "Delicate cotton net dupatta with lace detailing.",
-      category: "Dupattas"
-    },
-    {
-      id: "5",
-      name: "Banarsi Brocade Saree",
-      price: 15000,
-      image: "/placeholder.svg",
-      description: "Luxurious banarsi brocade saree for special occasions.",
-      category: "Sarees"
-    },
-    {
-      id: "6",
-      name: "Digital Print Lawn Shirt",
-      price: 3500,
-      image: "/placeholder.svg",
-      description: "Trendy lawn shirt with modern digital prints.",
-      category: "Shirts"
+      description: "Comfortable everyday wear with style",
+      category: "Featured",
+      rating: 4.4,
+      reviews: 67
     }
   ];
 
@@ -78,88 +90,334 @@ const Index = () => {
     setCurrency(currencyMap[region] || "PKR");
   };
 
+  const handleBuyNow = (product: any) => {
+    setSelectedProduct(product);
+    setShowPaymentModal(true);
+  };
+
+  const handleAuthSuccess = (user: any) => {
+    setCurrentUser(user);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    setCurrentUser(null);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50">
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+      {/* SEO Meta Tags - Would be handled by Helmet in a real app */}
+      
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b shadow-sm">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b shadow-sm">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-3xl font-bold text-amber-800 font-serif">KK-CLOTHING</h1>
-              <nav className="hidden md:flex items-center space-x-6">
-                <a href="/new-arrivals" className="text-gray-700 hover:text-amber-600 font-medium">New Arrivals</a>
-                <a href="/unstitched" className="text-gray-700 hover:text-amber-600 font-medium">Unstitched</a>
-                <a href="/ready-to-wear" className="text-gray-700 hover:text-amber-600 font-medium">Ready to Wear</a>
-                <a href="/accessories" className="text-gray-700 hover:text-amber-600 font-medium">Accessories</a>
-                <a href="/about" className="text-gray-700 hover:text-amber-600 font-medium">About</a>
-                <a href="/contact" className="text-gray-700 hover:text-amber-600 font-medium">Contact</a>
-              </nav>
+            {/* Logo */}
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-bold text-gray-800 font-serif">KK-CLOTHING</h1>
+              <Badge variant="secondary" className="hidden md:inline-flex">Premium Pakistani Fashion</Badge>
             </div>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center space-x-8">
+              <Link to="/" className="text-gray-700 hover:text-amber-600 transition-colors">Home</Link>
+              <Link to="/new-arrivals" className="text-gray-700 hover:text-amber-600 transition-colors">New Arrivals</Link>
+              <Link to="/unstitched" className="text-gray-700 hover:text-amber-600 transition-colors">Unstitched</Link>
+              <Link to="/ready-to-wear" className="text-gray-700 hover:text-amber-600 transition-colors">Ready to Wear</Link>
+              <Link to="/accessories" className="text-gray-700 hover:text-amber-600 transition-colors">Accessories</Link>
+              <Link to="/about" className="text-gray-700 hover:text-amber-600 transition-colors">About</Link>
+              <Link to="/contact" className="text-gray-700 hover:text-amber-600 transition-colors">Contact</Link>
+            </nav>
+
+            {/* Right Side Controls */}
             <div className="flex items-center space-x-4">
               <RegionSelector selectedRegion={selectedRegion} onRegionChange={handleRegionChange} />
-              <div className="flex items-center space-x-2">
+              
+              {/* Desktop Icons */}
+              <div className="hidden md:flex items-center space-x-2">
                 <Button variant="ghost" size="icon">
                   <Search className="w-5 h-5" />
                 </Button>
                 <Button variant="ghost" size="icon">
                   <Heart className="w-5 h-5" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => setShowCart(!showCart)}>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setShowCart(true)}
+                >
                   <ShoppingBag className="w-5 h-5" />
                 </Button>
-                <Button variant="ghost" size="icon">
-                  <User className="w-5 h-5" />
-                </Button>
+                
+                {/* User Account */}
+                {currentUser ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-700">Hello, {currentUser.name}</span>
+                    <Button variant="outline" size="sm" onClick={handleLogout}>
+                      Logout
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowAuthModal(true)}
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Account
+                  </Button>
+                )}
               </div>
+
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </Button>
             </div>
           </div>
+
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className="lg:hidden mt-4 pb-4 border-t">
+              <nav className="flex flex-col space-y-3 pt-4">
+                <Link to="/" className="text-gray-700 hover:text-amber-600 transition-colors">Home</Link>
+                <Link to="/new-arrivals" className="text-gray-700 hover:text-amber-600 transition-colors">New Arrivals</Link>
+                <Link to="/unstitched" className="text-gray-700 hover:text-amber-600 transition-colors">Unstitched</Link>
+                <Link to="/ready-to-wear" className="text-gray-700 hover:text-amber-600 transition-colors">Ready to Wear</Link>
+                <Link to="/accessories" className="text-gray-700 hover:text-amber-600 transition-colors">Accessories</Link>
+                <Link to="/about" className="text-gray-700 hover:text-amber-600 transition-colors">About</Link>
+                <Link to="/contact" className="text-gray-700 hover:text-amber-600 transition-colors">Contact</Link>
+                
+                <div className="flex items-center space-x-4 pt-4 border-t">
+                  <Button variant="ghost" size="sm">
+                    <Search className="w-4 h-4 mr-2" />
+                    Search
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    <Heart className="w-4 h-4 mr-2" />
+                    Wishlist
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setShowCart(true)}>
+                    <ShoppingBag className="w-4 h-4 mr-2" />
+                    Cart
+                  </Button>
+                </div>
+                
+                {!currentUser && (
+                  <Button 
+                    variant="outline" 
+                    className="mt-4"
+                    onClick={() => setShowAuthModal(true)}
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Login / Sign Up
+                  </Button>
+                )}
+              </nav>
+            </div>
+          )}
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          <div className="space-y-5">
-            <Badge variant="secondary">New Season</Badge>
-            <h2 className="text-5xl font-bold text-gray-800">Pakistani Fashion at Your Doorstep</h2>
-            <p className="text-gray-600 text-lg">
-              Explore the latest trends in Pakistani clothing. From traditional wear to modern designs, find everything you need to express your unique style.
+      <section className="relative py-20 bg-gradient-to-r from-amber-100 via-amber-50 to-orange-100">
+        <div className="container mx-auto px-4 text-center">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-6 font-serif">
+              Discover Authentic Pakistani Fashion
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-600 mb-8 leading-relaxed">
+              Premium collection of traditional and modern Pakistani dresses. 
+              <br className="hidden md:block" />
+              Shop worldwide with local currency support.
             </p>
-            <div className="flex space-x-4">
-              <Button className="bg-amber-600 hover:bg-amber-700 text-white">Shop Now</Button>
-              <Button variant="outline">Explore More</Button>
-            </div>
-          </div>
-          <div className="relative">
-            <img
-              src="/hero-image.jpg"
-              alt="Pakistani Fashion"
-              className="rounded-lg shadow-xl"
-            />
-            <div className="absolute bottom-0 right-0 p-4 bg-white/80 backdrop-blur-sm rounded-tl-lg">
-              <p className="text-sm text-gray-700">
-                New arrivals are here! Get 20% off on your first order.
-              </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" className="bg-amber-600 hover:bg-amber-700 px-8 py-4 text-lg">
+                Explore Collection
+              </Button>
+              <Button size="lg" variant="outline" className="px-8 py-4 text-lg">
+                View Size Guide
+              </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Shopping Cart */}
+      {/* AdSense Header Ad */}
+      <AdSenseAd 
+        adClient="ca-pub-XXXXXXXXXXXXXXXX"
+        adSlot="1234567891"
+        className="my-8"
+      />
+
+      {/* Featured Products */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <Badge variant="secondary" className="mb-4">Premium Collection</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Featured Products</h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              Handpicked selection of our finest Pakistani dresses, crafted with attention to detail and traditional artistry.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {featuredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                currency={currency}
+                region={selectedRegion}
+                onBuyNow={handleBuyNow}
+                showDiscount={true}
+              />
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Link to="/new-arrivals">
+              <Button size="lg" variant="outline" className="px-8">
+                View All Products
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Categories Section */}
+      <section className="py-16 bg-gradient-to-b from-gray-50 to-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Shop by Category</h2>
+            <p className="text-gray-600 text-lg">Explore our diverse range of Pakistani fashion</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { name: "New Arrivals", link: "/new-arrivals", desc: "Latest fashion trends", color: "bg-rose-100" },
+              { name: "Unstitched", link: "/unstitched", desc: "Premium fabrics", color: "bg-blue-100" },
+              { name: "Ready to Wear", link: "/ready-to-wear", desc: "Complete outfits", color: "bg-green-100" },
+              { name: "Accessories", link: "/accessories", desc: "Perfect finishing touches", color: "bg-purple-100" }
+            ].map((category) => (
+              <Link key={category.name} to={category.link}>
+                <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                  <CardContent className="p-6 text-center">
+                    <div className={`w-16 h-16 ${category.color} rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                      <span className="text-2xl font-bold text-gray-600">{category.name[0]}</span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">{category.name}</h3>
+                    <p className="text-gray-600">{category.desc}</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* AdSense Sidebar Ad */}
+      <AdSenseAd 
+        adClient="ca-pub-XXXXXXXXXXXXXXXX"
+        adSlot="9876543210"
+        className="my-8"
+      />
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="text-xl font-bold mb-4 font-serif">KK-CLOTHING</h3>
+              <p className="text-gray-400 mb-4">
+                Premium Pakistani fashion delivered worldwide. Authentic designs, quality craftsmanship.
+              </p>
+              <div className="flex space-x-4">
+                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">Facebook</Button>
+                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">Instagram</Button>
+                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">WhatsApp</Button>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Quick Links</h4>
+              <div className="space-y-2">
+                <Link to="/about" className="block text-gray-400 hover:text-white transition-colors">About Us</Link>
+                <Link to="/contact" className="block text-gray-400 hover:text-white transition-colors">Contact</Link>
+                <Link to="/size-guide" className="block text-gray-400 hover:text-white transition-colors">Size Guide</Link>
+                <a href="#" className="block text-gray-400 hover:text-white transition-colors">Shipping Info</a>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Categories</h4>
+              <div className="space-y-2">
+                <Link to="/new-arrivals" className="block text-gray-400 hover:text-white transition-colors">New Arrivals</Link>
+                <Link to="/unstitched" className="block text-gray-400 hover:text-white transition-colors">Unstitched</Link>
+                <Link to="/ready-to-wear" className="block text-gray-400 hover:text-white transition-colors">Ready to Wear</Link>
+                <Link to="/accessories" className="block text-gray-400 hover:text-white transition-colors">Accessories</Link>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Customer Support</h4>
+              <div className="space-y-2 text-gray-400">
+                <p>Email: support@kk-clothing.com</p>
+                <p>Phone: +92-XXX-XXXXXXX</p>
+                <p>WhatsApp: +92-XXX-XXXXXXX</p>
+                <p>Mon-Sat: 9 AM - 8 PM</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center">
+            <p className="text-gray-400">
+              © 2025 KK-Clothing. All rights reserved. | 
+              <a href="#" className="hover:text-white ml-1">Privacy Policy</a> | 
+              <a href="#" className="hover:text-white ml-1">Terms of Service</a>
+            </p>
+          </div>
+        </div>
+      </footer>
+
+      {/* Modals */}
+      {showPaymentModal && selectedProduct && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          product={selectedProduct}
+          region={selectedRegion}
+          currency={currency}
+        />
+      )}
+
+      {showAuthModal && (
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onAuthSuccess={handleAuthSuccess}
+        />
+      )}
+
       {showCart && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-4 border-b flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Shopping Cart</h3>
-              <Button variant="ghost" onClick={() => setShowCart(false)}>×</Button>
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-xl font-semibold">Shopping Cart</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowCart(false)}>
+                <X className="w-5 h-5" />
+              </Button>
             </div>
             <div className="p-4">
-              <ShoppingCart 
+              <ShoppingCart
                 currency={currency}
-                onCheckout={(items) => {
-                  console.log("Checkout items:", items);
+                onCheckout={() => {
                   setShowCart(false);
-                  alert("Proceeding to checkout...");
+                  // Handle checkout logic
                 }}
               />
             </div>
@@ -167,95 +425,8 @@ const Index = () => {
         </div>
       )}
 
-      {/* Featured Products */}
-      <section className="container mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <Badge variant="secondary">Our Best Sellers</Badge>
-          <h2 className="text-4xl font-bold text-gray-800">Featured Products</h2>
-          <p className="text-gray-600 text-lg">Explore our handpicked selection of the finest Pakistani fashion.</p>
-        </div>
-
-        <AdSenseAd 
-          adClient="ca-pub-XXXXXXXXXXXXXXXX"
-          adSlot="1234567891"
-          className="my-8"
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              currency={currency}
-              region={selectedRegion}
-            />
-          ))}
-        </div>
-
-        <AdSenseAd 
-          adClient="ca-pub-XXXXXXXXXXXXXXXX"
-          adSlot="9876543210"
-          className="my-8"
-        />
-      </section>
-
-      {/* Categories Section */}
-      <section className="container mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <Badge variant="secondary">Shop by Category</Badge>
-          <h2 className="text-4xl font-bold text-gray-800">Explore Our Categories</h2>
-          <p className="text-gray-600 text-lg">Find the perfect outfit for every occasion.</p>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-4 text-center">
-              <a href="/new-arrivals">
-                <h3 className="font-semibold text-lg mb-2">New Arrivals</h3>
-                <img src="/placeholder.svg" alt="New Arrivals" className="w-full h-32 object-cover rounded-md" />
-              </a>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-4 text-center">
-              <a href="/unstitched">
-                <h3 className="font-semibold text-lg mb-2">Unstitched</h3>
-                <img src="/placeholder.svg" alt="Unstitched" className="w-full h-32 object-cover rounded-md" />
-              </a>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-4 text-center">
-              <a href="/ready-to-wear">
-                <h3 className="font-semibold text-lg mb-2">Ready to Wear</h3>
-                <img src="/placeholder.svg" alt="Ready to Wear" className="w-full h-32 object-cover rounded-md" />
-              </a>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-4 text-center">
-              <a href="/accessories">
-                <h3 className="font-semibold text-lg mb-2">Accessories</h3>
-                <img src="/placeholder.svg" alt="Accessories" className="w-full h-32 object-cover rounded-md" />
-              </a>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-100 py-12">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-gray-600">
-            &copy; 2024 KK-CLOTHING. All rights reserved.
-          </p>
-          <div className="mt-4">
-            <a href="/about" className="text-gray-700 hover:text-amber-600 mx-3">About Us</a>
-            <a href="/contact" className="text-gray-700 hover:text-amber-600 mx-3">Contact Us</a>
-            <a href="/size-guide" className="text-gray-700 hover:text-amber-600 mx-3">Size Guide</a>
-          </div>
-        </div>
-      </footer>
+      {/* Chat Widget */}
+      <ChatWidget />
     </div>
   );
 };

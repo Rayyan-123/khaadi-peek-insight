@@ -1,124 +1,160 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, ShoppingBag, Eye } from "lucide-react";
-import { PaymentModal } from "@/components/PaymentModal";
+import { Heart, Star, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 import { ViewCounter } from "@/components/ViewCounter";
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  description: string;
-  category: string;
-}
-
 interface ProductCardProps {
-  product: Product;
+  product: {
+    id: string;
+    name: string;
+    price: number;
+    discountPrice?: number;
+    image: string;
+    description: string;
+    category: string;
+    rating?: number;
+    reviews?: number;
+  };
   currency: string;
   region: string;
+  onBuyNow?: (product: any) => void;
+  showDiscount?: boolean;
 }
 
-export const ProductCard = ({ product, currency, region }: ProductCardProps) => {
-  const [showPayment, setShowPayment] = useState(false);
+export const ProductCard = ({ product, currency, region, onBuyNow, showDiscount = false }: ProductCardProps) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [isInCart, setIsInCart] = useState(false);
+  
+  const finalPrice = product.discountPrice || product.price;
+  const discountPercentage = product.discountPrice 
+    ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
+    : 0;
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-    }).format(price);
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onBuyNow) {
+      onBuyNow(product);
+    }
   };
 
-  const addToCart = () => {
-    setIsInCart(true);
-    // Simulate adding to cart
-    console.log("Added to cart:", product.id);
-    setTimeout(() => setIsInCart(false), 2000);
+  const toggleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsWishlisted(!isWishlisted);
   };
 
   return (
-    <>
-      <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
+    <Card className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-0 shadow-md">
+      <Link to={`/product/${product.id}`}>
         <div className="relative overflow-hidden">
-          <a href={`/product/${product.id}`}>
-            <img 
-              src={product.image} 
-              alt={product.name}
-              className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          </a>
-          <div className="absolute top-2 right-2 flex flex-col gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="bg-white/80 hover:bg-white"
-              onClick={() => setIsWishlisted(!isWishlisted)}
+          <img 
+            src={product.image} 
+            alt={product.name}
+            className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+          
+          {/* Discount Badge */}
+          {showDiscount && discountPercentage > 0 && (
+            <Badge className="absolute top-3 left-3 bg-red-500 hover:bg-red-600">
+              {discountPercentage}% OFF
+            </Badge>
+          )}
+          
+          {/* Wishlist Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-3 right-3 bg-white/80 hover:bg-white"
+            onClick={toggleWishlist}
+          >
+            <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+          </Button>
+
+          {/* Quick Buy Overlay */}
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <Button 
+              className="bg-white text-black hover:bg-gray-100"
+              onClick={handleBuyNow}
             >
-              <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+              Quick Buy
             </Button>
           </div>
-          <Badge className="absolute top-2 left-2 bg-amber-600 hover:bg-amber-700">
+        </div>
+      </Link>
+
+      <CardContent className="p-4">
+        <div className="space-y-3">
+          {/* Category Badge */}
+          <Badge variant="secondary" className="text-xs">
             {product.category}
           </Badge>
-        </div>
-        
-        <CardContent className="p-4">
-          <a href={`/product/${product.id}`}>
-            <h3 className="font-semibold text-lg mb-2 group-hover:text-amber-600 transition-colors">
+
+          {/* Product Name */}
+          <Link to={`/product/${product.id}`}>
+            <h3 className="font-semibold text-gray-800 group-hover:text-amber-600 transition-colors line-clamp-2">
               {product.name}
             </h3>
-          </a>
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-            {product.description}
-          </p>
-          
-          <ViewCounter productId={product.id} />
-          
-          <div className="flex items-center justify-between mt-3">
+          </Link>
+
+          {/* Rating */}
+          {product.rating && (
             <div className="flex items-center space-x-2">
-              <span className="text-xl font-bold text-amber-600">
-                {formatPrice(product.price)}
-              </span>
-              <span className="text-sm text-gray-500 line-through">
-                {formatPrice(product.price * 1.4)}
+              <div className="flex items-center">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-4 h-4 ${
+                      i < Math.floor(product.rating!)
+                        ? 'text-yellow-400 fill-current'
+                        : 'text-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-sm text-gray-600">
+                ({product.reviews} reviews)
               </span>
             </div>
-            <Badge variant="destructive" className="text-xs">
-              30% OFF
-            </Badge>
+          )}
+
+          {/* View Counter */}
+          <ViewCounter productId={product.id} />
+
+          {/* Price */}
+          <div className="flex items-center space-x-2">
+            <span className="text-lg font-bold text-amber-600">
+              {currency} {finalPrice.toLocaleString()}
+            </span>
+            {product.discountPrice && (
+              <span className="text-sm text-gray-500 line-through">
+                {currency} {product.price.toLocaleString()}
+              </span>
+            )}
           </div>
-          <div className="flex gap-2 mt-4">
+
+          {/* Description */}
+          <p className="text-sm text-gray-600 line-clamp-2">
+            {product.description}
+          </p>
+
+          {/* Action Buttons */}
+          <div className="flex space-x-2 pt-2">
             <Button 
               className="flex-1 bg-amber-600 hover:bg-amber-700"
-              onClick={() => setShowPayment(true)}
+              onClick={handleBuyNow}
             >
-              <ShoppingBag className="w-4 h-4 mr-2" />
               Buy Now
             </Button>
-            <Button 
-              variant="outline" 
-              className={`flex-1 ${isInCart ? 'bg-green-100 text-green-700' : ''}`}
-              onClick={addToCart}
-              disabled={isInCart}
-            >
-              {isInCart ? 'Added!' : 'Add to Cart'}
-            </Button>
+            <Link to={`/product/${product.id}`} className="flex-1">
+              <Button variant="outline" className="w-full">
+                View Details
+              </Button>
+            </Link>
           </div>
-        </CardContent>
-      </Card>
-
-      <PaymentModal 
-        isOpen={showPayment}
-        onClose={() => setShowPayment(false)}
-        product={product}
-        currency={currency}
-        region={region}
-      />
-    </>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
