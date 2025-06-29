@@ -12,7 +12,7 @@ export const ChatWidget = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
-      text: 'Hello! Welcome to KK-Clothing. I\'m your AI assistant and can help you with detailed information about our products, prices, sizes, colors, and more. What would you like to know?',
+      text: 'Hello! Welcome to KK-Clothing. I\'m your AI assistant and can help you with detailed information about our products, prices, sizes, colors, and more. What would you like to know?\n\nآپ اردو، رومن اردو، انگریزی، ہندی یا رومن ہندی میں سوال کر سکتے ہیں۔\n\nAap Urdu, Roman Urdu, English, Hindi ya Roman Hindi mein sawal kar sakte hain.',
       sender: 'ai',
       timestamp: new Date()
     }
@@ -59,7 +59,7 @@ export const ChatWidget = () => {
     setTimeout(() => {
       const adminNotification: ChatMessage = {
         id: (Date.now() + 2).toString(),
-        text: 'Our support team is also available for personalized assistance. If you need help with orders, custom requests, or have specific concerns, we\'re here to help!',
+        text: 'Our support team is also available for personalized assistance. If you need help with orders, custom requests, or have specific concerns, we\'re here to help!\n\nHamari support team bhi personalized assistance ke liye available hai. Agar aapko orders, custom requests ya specific concerns mein madad chahiye, hum yahan hain!',
         sender: 'admin',
         timestamp: new Date()
       };
@@ -141,7 +141,9 @@ export const ChatWidget = () => {
                       {message.sender === 'admin' && <MessageCircle className="w-3 h-3" />}
                     </div>
                     <div className="flex-1">
-                      <p className="whitespace-pre-line">{message.text}</p>
+                      <p className="whitespace-pre-line" style={{ direction: /[\u0600-\u06FF]/.test(message.text) ? 'rtl' : 'ltr' }}>
+                        {message.text}
+                      </p>
                       <p className="text-xs opacity-70 mt-1">
                         {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
@@ -158,8 +160,9 @@ export const ChatWidget = () => {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask about products, prices, sizes..."
+                  placeholder="Ask in English, Urdu, Hindi... | Urdu/Hindi mein sawal karein..."
                   className="flex-1"
+                  style={{ direction: /[\u0600-\u06FF]/.test(newMessage) ? 'rtl' : 'ltr' }}
                 />
                 <Button
                   onClick={sendMessage}
@@ -170,7 +173,7 @@ export const ChatWidget = () => {
                 </Button>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                AI assistant with full product database • Live support available
+                Multilingual AI support • اردو، انگریزی، ہندی میں سپورٹ • Live support available
               </p>
             </div>
           </CardContent>
