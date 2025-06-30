@@ -3,16 +3,21 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageCircle, Send, X, Minimize2, Bot, User } from "lucide-react";
+import { MessageCircle, Send, X, Minimize2, Bot, User, CreditCard } from "lucide-react";
 import { aiService, saveChatMessage, type ChatMessage } from "@/services/aiService";
+import { adminNotificationService } from "@/services/adminNotificationService";
+import { PaymentDetails } from "@/components/PaymentDetails";
 
 export const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [showPaymentDetails, setShowPaymentDetails] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [hasProvidedName, setHasProvidedName] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
-      text: 'Hello! Welcome to KK-Clothing. I\'m your AI assistant and can help you with detailed information about our products, prices, sizes, colors, and more. What would you like to know?\n\nآپ اردو، رومن اردو، انگریزی، ہندی یا رومن ہندی میں سوال کر سکتے ہیں۔\n\nAap Urdu, Roman Urdu, English, Hindi ya Roman Hindi mein sawal kar sakte hain.',
+      text: 'Hello! Welcome to KK-Clothing. I\'m your AI assistant and can help you with detailed information about our products, prices, sizes, colors, and more.\n\nIf you need to speak with our team directly, please provide your name and we\'ll connect you!\n\nآپ اردو، رومن اردو، انگریزی، ہندی یا رومن ہندی میں سوال کر سکتے ہیں۔\n\nAap Urdu, Roman Urdu, English, Hindi ya Roman Hindi mein sawal kar sakte hain.',
       sender: 'ai',
       timestamp: new Date()
     }
@@ -31,6 +36,49 @@ export const ChatWidget = () => {
   const sendMessage = () => {
     if (!newMessage.trim()) return;
 
+    // If user hasn't provided name and message contains "talk to us", "connect", "speak", etc.
+    const needsHumanAssistance = newMessage.toLowerCase().includes('talk') || 
+                                newMessage.toLowerCase().includes('connect') || 
+                                newMessage.toLowerCase().includes('speak') ||
+                                newMessage.toLowerCase().includes('help') ||
+                                newMessage.toLowerCase().includes('support') ||
+                                newMessage.toLowerCase().includes('team') ||
+                                newMessage.toLowerCase().includes('baat') ||
+                                newMessage.toLowerCase().includes('madad');
+
+    if (needsHumanAssistance && !hasProvidedName) {
+      const nameResponse: ChatMessage = {
+        id: Date.now().toString(),
+        text: 'To connect you with our team, please provide your name so we can assist you personally.\n\nHamari team se connect karne ke liye, kripaya apna naam batayein taki hum aapki personal madad kar sakein.',
+        sender: 'ai',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, nameResponse]);
+      return;
+    }
+
+    // If this looks like a name (simple heuristic)
+    if (!hasProvidedName && newMessage.trim().split(' ').length <= 3 && !newMessage.includes('?') && newMessage.trim().length < 50) {
+      setUserName(newMessage.trim());
+      setHasProvidedName(true);
+      
+      const welcomeResponse: ChatMessage = {
+        id: Date.now().toString(),
+        text: `Thank you ${newMessage.trim()}! I've noted your name. Our team will be able to see your messages and respond to you personally. How can we help you today?\n\nShukriya ${newMessage.trim()}! Maine aapka naam note kar liya hai. Hamari team aapke messages dekh sakegi aur aapko personal jawab degi. Aaj hum aapki kaise madad kar sakte hain?`,
+        sender: 'ai',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, welcomeResponse]);
+      
+      // Notify admin that user wants to connect
+      adminNotificationService.addAdminNotification(
+        newMessage.trim(), 
+        `User ${newMessage.trim()} wants to connect with the team`, 
+        Date.now().toString()
+      );
+      return;
+    }
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       text: newMessage,
@@ -41,6 +89,12 @@ export const ChatWidget = () => {
 
     setMessages(prev => [...prev, userMessage]);
     saveChatMessage(userMessage);
+
+    // If user has provided name, notify admin about their message
+    if (hasProvidedName && userName) {
+      adminNotificationService.addAdminNotification(userName, newMessage, userMessage.id);
+    }
+
     setNewMessage('');
 
     // AI response
@@ -55,17 +109,16 @@ export const ChatWidget = () => {
       saveChatMessage(aiResponse);
     }, 1000);
 
-    // Admin notification (optional)
-    setTimeout(() => {
-      const adminNotification: ChatMessage = {
-        id: (Date.now() + 2).toString(),
-        text: 'Our support team is also available for personalized assistance. If you need help with orders, custom requests, or have specific concerns, we\'re here to help!\n\nHamari support team bhi personalized assistance ke liye available hai. Agar aapko orders, custom requests ya specific concerns mein madad chahiye, hum yahan hain!',
-        sender: 'admin',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, adminNotification]);
-      saveChatMessage(adminNotification);
-    }, 3000);
+    // Show payment details for payment-related queries
+    if (newMessage.toLowerCase().includes('payment') || 
+        newMessage.toLowerCase().includes('pay') || 
+        newMessage.toLowerCase().includes('bank') || 
+        newMessage.toLowerCase().includes('paisa') ||
+        newMessage.toLowerCase().includes('qeemat')) {
+      setTimeout(() => {
+        setShowPaymentDetails(true);
+      }, 2000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -96,8 +149,21 @@ export const ChatWidget = () => {
             <CardTitle className="text-sm flex items-center">
               <Bot className="w-4 h-4 mr-1" />
               KK-Clothing AI Assistant
+              {hasProvidedName && userName && (
+                <span className="ml-2 text-xs bg-amber-700 px-2 py-1 rounded">
+                  {userName}
+                </span>
+              )}
             </CardTitle>
             <div className="flex space-x-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowPaymentDetails(!showPaymentDetails)}
+                className="h-6 w-6 text-white hover:bg-amber-700"
+              >
+                <CreditCard className="h-3 w-3" />
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
@@ -120,7 +186,13 @@ export const ChatWidget = () => {
         
         {!isMinimized && (
           <CardContent className="p-0 flex flex-col h-80">
-            <div className="flex-1 overflow-y-auto p-3 space-y-3">
+            {showPaymentDetails && (
+              <div className="p-3 border-b bg-amber-50">
+                <PaymentDetails />
+              </div>
+            )}
+            
+            <div className={`flex-1 overflow-y-auto p-3 space-y-3 ${showPaymentDetails ? 'h-40' : ''}`}>
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -160,7 +232,11 @@ export const ChatWidget = () => {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask in English, Urdu, Hindi... | Urdu/Hindi mein sawal karein..."
+                  placeholder={
+                    !hasProvidedName 
+                      ? "Ask in English, Urdu, Hindi... | Type your name to connect with team"
+                      : "Ask in English, Urdu, Hindi... | Urdu/Hindi mein sawal karein..."
+                  }
                   className="flex-1"
                   style={{ direction: /[\u0600-\u06FF]/.test(newMessage) ? 'rtl' : 'ltr' }}
                 />
@@ -173,7 +249,7 @@ export const ChatWidget = () => {
                 </Button>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Multilingual AI support • اردو، انگریزی، ہندی میں سپورٹ • Live support available
+                Multilingual AI support • اردو، انگریزی، ہندی میں سپورٹ • Live team support available
               </p>
             </div>
           </CardContent>
