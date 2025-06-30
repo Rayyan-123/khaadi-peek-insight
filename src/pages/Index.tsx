@@ -6,12 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChatWidget } from "@/components/ChatWidget";
 import { ShoppingCart } from "@/components/ShoppingCart";
+import { RegionSelector } from "@/components/RegionSelector";
 import { allProducts } from "@/services/productService";
 import { UserNotifications } from "@/components/UserNotifications";
+import { convertCurrency, getCurrencySymbol } from "@/services/currencyService";
 
 export default function Index() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState("Pakistan");
+  const [currency, setCurrency] = useState("PKR");
   const [cart, setCart] = useState(() => {
     try {
       const storedCart = localStorage.getItem('cart');
@@ -25,6 +29,18 @@ export default function Index() {
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
+
+  const handleRegionChange = (region: string) => {
+    setSelectedRegion(region);
+    const currencyMap: { [key: string]: string } = {
+      "Pakistan": "PKR",
+      "UAE": "AED",
+      "UK": "GBP",
+      "US": "USD",
+      "Global": "USD"
+    };
+    setCurrency(currencyMap[region] || "PKR");
+  };
 
   const addToCart = (product: any) => {
     setCart(prev => {
@@ -54,6 +70,8 @@ export default function Index() {
       );
     }
   };
+
+  const currencySymbol = getCurrencySymbol(currency);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -86,6 +104,7 @@ export default function Index() {
             </div>
 
             <div className="flex items-center space-x-4">
+              <RegionSelector selectedRegion={selectedRegion} onRegionChange={handleRegionChange} />
               <UserNotifications />
               
               <Button
@@ -192,27 +211,34 @@ export default function Index() {
             Featured Products
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {allProducts.slice(0, 3).map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-64 object-cover"
-                />
-                <div className="p-4">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                    {product.name}
-                  </h3>
-                  <p className="text-gray-600 mb-3">{product.description}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-amber-600 font-bold">
-                      PKR {product.discountPrice || product.price}
-                    </span>
-                    <Button onClick={() => addToCart(product)}>Add to Cart</Button>
+            {allProducts.slice(0, 3).map((product) => {
+              const convertedPrice = convertCurrency(product.price, 'PKR', currency);
+              const convertedDiscountPrice = product.discountPrice ? convertCurrency(product.discountPrice, 'PKR', currency) : undefined;
+              
+              return (
+                <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-64 object-cover"
+                  />
+                  <div className="p-4">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                      {product.name}
+                    </h3>
+                    <p className="text-gray-600 mb-3">{product.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-amber-600 font-bold">
+                        {currencySymbol} {(convertedDiscountPrice || convertedPrice).toLocaleString()}
+                      </span>
+                      <Button onClick={() => addToCart({...product, price: convertedPrice, discountPrice: convertedDiscountPrice})}>
+                        Add to Cart
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -300,6 +326,7 @@ export default function Index() {
         cart={cart}
         updateQuantity={updateQuantity}
         removeFromCart={removeFromCart}
+        currency={currencySymbol}
       />
     </div>
   );

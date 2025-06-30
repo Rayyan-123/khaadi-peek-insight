@@ -15,50 +15,30 @@ interface CartItem {
 }
 
 interface ShoppingCartProps {
-  currency: string;
-  onCheckout: (items: CartItem[]) => void;
+  cart: CartItem[];
+  updateQuantity: (productId: string, newQuantity: number) => void;
+  removeFromCart: (productId: string) => void;
+  currency?: string;
+  onCheckout?: (items: CartItem[]) => void;
 }
 
-export const ShoppingCart = ({ currency, onCheckout }: ShoppingCartProps) => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      id: "1",
-      name: "Floral Lawn Kurta",
-      price: 5000,
-      quantity: 1,
-      image: "/placeholder.svg",
-      size: "M"
-    }
-  ]);
-
-  const updateQuantity = (id: string, change: number) => {
-    setCartItems(prev => prev.map(item => 
-      item.id === id 
-        ? { ...item, quantity: Math.max(1, item.quantity + change) }
-        : item
-    ));
-  };
-
-  const removeItem = (id: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
-  };
-
-  const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+export const ShoppingCart = ({ cart, updateQuantity, removeFromCart, currency = "PKR", onCheckout }: ShoppingCartProps) => {
+  const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           Shopping Cart
-          <Badge variant="secondary">{cartItems.length} items</Badge>
+          <Badge variant="secondary">{cart.length} items</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {cartItems.length === 0 ? (
+        {cart.length === 0 ? (
           <p className="text-center text-gray-500 py-8">Your cart is empty</p>
         ) : (
           <div className="space-y-4">
-            {cartItems.map((item) => (
+            {cart.map((item) => (
               <div key={item.id} className="flex items-center space-x-4 p-4 border rounded-lg">
                 <img 
                   src={item.image} 
@@ -74,7 +54,7 @@ export const ShoppingCart = ({ currency, onCheckout }: ShoppingCartProps) => {
                   <Button 
                     variant="outline" 
                     size="icon"
-                    onClick={() => updateQuantity(item.id, -1)}
+                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
                   >
                     <Minus className="w-4 h-4" />
                   </Button>
@@ -82,7 +62,7 @@ export const ShoppingCart = ({ currency, onCheckout }: ShoppingCartProps) => {
                   <Button 
                     variant="outline" 
                     size="icon"
-                    onClick={() => updateQuantity(item.id, 1)}
+                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
                   >
                     <Plus className="w-4 h-4" />
                   </Button>
@@ -90,7 +70,7 @@ export const ShoppingCart = ({ currency, onCheckout }: ShoppingCartProps) => {
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  onClick={() => removeItem(item.id)}
+                  onClick={() => removeFromCart(item.id)}
                   className="text-red-500 hover:text-red-700"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -107,7 +87,7 @@ export const ShoppingCart = ({ currency, onCheckout }: ShoppingCartProps) => {
               </div>
               <Button 
                 className="w-full bg-amber-600 hover:bg-amber-700"
-                onClick={() => onCheckout(cartItems)}
+                onClick={() => onCheckout && onCheckout(cart)}
               >
                 Proceed to Checkout
               </Button>

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Heart, Star, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ViewCounter } from "@/components/ViewCounter";
+import { convertCurrency, getCurrencySymbol } from "@/services/currencyService";
 
 interface ProductCardProps {
   product: {
@@ -28,15 +29,21 @@ interface ProductCardProps {
 export const ProductCard = ({ product, currency, region, onBuyNow, showDiscount = false }: ProductCardProps) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   
-  const finalPrice = product.discountPrice || product.price;
-  const discountPercentage = product.discountPrice 
-    ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
+  // Convert prices from PKR to selected currency
+  const convertedPrice = convertCurrency(product.price, 'PKR', currency);
+  const convertedDiscountPrice = product.discountPrice ? convertCurrency(product.discountPrice, 'PKR', currency) : undefined;
+  
+  const finalPrice = convertedDiscountPrice || convertedPrice;
+  const discountPercentage = convertedDiscountPrice 
+    ? Math.round(((convertedPrice - convertedDiscountPrice) / convertedPrice) * 100)
     : 0;
+
+  const currencySymbol = getCurrencySymbol(currency);
 
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
     if (onBuyNow) {
-      onBuyNow(product);
+      onBuyNow({ ...product, price: convertedPrice, discountPrice: convertedDiscountPrice });
     }
   };
 
@@ -125,11 +132,11 @@ export const ProductCard = ({ product, currency, region, onBuyNow, showDiscount 
           {/* Price */}
           <div className="flex items-center space-x-2">
             <span className="text-lg font-bold text-amber-600">
-              {currency} {finalPrice.toLocaleString()}
+              {currencySymbol} {finalPrice.toLocaleString()}
             </span>
-            {product.discountPrice && (
+            {convertedDiscountPrice && (
               <span className="text-sm text-gray-500 line-through">
-                {currency} {product.price.toLocaleString()}
+                {currencySymbol} {convertedPrice.toLocaleString()}
               </span>
             )}
           </div>
