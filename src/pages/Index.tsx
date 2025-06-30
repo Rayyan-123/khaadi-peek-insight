@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingBag, Menu } from "lucide-react";
@@ -78,6 +79,9 @@ export default function Index() {
                 <Link to="/accessories" className="text-gray-700 hover:text-amber-600 transition-colors">
                   Accessories
                 </Link>
+                <Link to="/contact" className="text-gray-700 hover:text-amber-600 transition-colors">
+                  Contact Us
+                </Link>
               </div>
             </div>
 
@@ -141,6 +145,13 @@ export default function Index() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Accessories
+              </Link>
+              <Link 
+                to="/contact" 
+                className="block px-3 py-2 text-gray-700 hover:text-amber-600"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Contact Us
               </Link>
             </div>
           </div>
@@ -267,17 +278,25 @@ export default function Index() {
 
       {/* Footer */}
       <footer className="bg-white py-8 border-t">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-gray-600">
-            &copy; {new Date().getFullYear()} KK-Clothing. All rights reserved.
-          </p>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-4">
+            <p className="text-gray-600 mb-2">
+              &copy; {new Date().getFullYear()} KK-Clothing. All rights reserved.
+            </p>
+            <div className="space-y-1">
+              <p className="text-gray-600">
+                📞 Call us: +92 300 1234567 | 📱 WhatsApp: +92 300 1234567
+              </p>
+              <p className="text-gray-600">
+                💬 Live Chat Available | 📧 Email: info@kk-clothing.com
+              </p>
+            </div>
+          </div>
         </div>
       </footer>
 
       <ChatWidget />
       <ShoppingCart 
-        isOpen={isCartOpen} 
-        onClose={() => setIsCartOpen(false)} 
         cart={cart}
         updateQuantity={updateQuantity}
         removeFromCart={removeFromCart}

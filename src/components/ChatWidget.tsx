@@ -17,7 +17,7 @@ export const ChatWidget = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
-      text: 'Hello! Welcome to KK-Clothing. I\'m your AI assistant and can help you with detailed information about our products, prices, sizes, colors, and more.\n\nIf you need to speak with our team directly, please provide your name and we\'ll connect you!\n\nآپ اردو، رومن اردو، انگریزی، ہندی یا رومن ہندی میں سوال کر سکتے ہیں۔\n\nAap Urdu, Roman Urdu, English, Hindi ya Roman Hindi mein sawal kar sakte hain.',
+      text: 'Hello! Welcome to KK-Clothing. I\'m your AI assistant and can help you with detailed information about our products, prices, sizes, colors, and more.\n\nIf you need to speak with our team directly, please provide your name and we\'ll connect you!\n\nآپ اردو، رومن اردو، انگریزی، ہندی یا رومن ہندی میں سوال کر سکتے ہیں۔\n\nAap Urdu, Roman Urdu, English, Hindi ya Roman Hindi mein sawal kar sakte hain.\n\n📞 To talk to our team, you can visit Contact Us or call us/WhatsApp us at +92 300 1234567\n\n💬 You can also request me to connect you with the KK-Clothing team!',
       sender: 'ai',
       timestamp: new Date()
     }
@@ -36,7 +36,7 @@ export const ChatWidget = () => {
   const sendMessage = () => {
     if (!newMessage.trim()) return;
 
-    // If user hasn't provided name and message contains "talk to us", "connect", "speak", etc.
+    // Check if user wants to connect with team
     const needsHumanAssistance = newMessage.toLowerCase().includes('talk') || 
                                 newMessage.toLowerCase().includes('connect') || 
                                 newMessage.toLowerCase().includes('speak') ||
@@ -44,7 +44,9 @@ export const ChatWidget = () => {
                                 newMessage.toLowerCase().includes('support') ||
                                 newMessage.toLowerCase().includes('team') ||
                                 newMessage.toLowerCase().includes('baat') ||
-                                newMessage.toLowerCase().includes('madad');
+                                newMessage.toLowerCase().includes('madad') ||
+                                newMessage.toLowerCase().includes('kk-clothing') ||
+                                newMessage.toLowerCase().includes('kk clothing');
 
     if (needsHumanAssistance && !hasProvidedName) {
       const nameResponse: ChatMessage = {
